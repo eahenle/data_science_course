@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.2
+# v0.12.3
 
 using Markdown
 using InteractiveUtils
@@ -59,7 +59,7 @@ the `group` column indicates whether the cauliflower was in the control or treat
 "
 
 # ╔═╡ f531ad34-0c30-11eb-0a02-8387fae3bfe9
-
+cauli_df = CSV.read("cauliflower.csv")
 
 # ╔═╡ 3704e316-0c31-11eb-14ab-d3f2fe5d1a84
 md"
@@ -70,13 +70,20 @@ md"
 "
 
 # ╔═╡ 90b997d2-0c31-11eb-1451-05ee41e55d37
-
+groups = by(cauli_df, :group, count=:group=>length)
 
 # ╔═╡ b2881d96-0c31-11eb-08ae-71f566a6dc9b
 md"🐸 compare the distribution of masses among the two groups (control, treatment) by drawing a box plot (two boxes, one for cauli masses in the treatment group, one for in the control group)."
 
-# ╔═╡ 7afff85c-0c32-11eb-2412-1d0e3268a75a
+# ╔═╡ 269b5c40-0cb2-11eb-0e54-7b0b44920253
+df_grouped = groupby(cauli_df, :group)
 
+# ╔═╡ 7afff85c-0c32-11eb-2412-1d0e3268a75a
+begin	
+	figure()
+	boxplot([grp[:mass] for grp in df_grouped], labels=[grp[1,:group] for grp in df_grouped])
+	gcf()
+end
 
 # ╔═╡ 7ba24210-0c32-11eb-1f0e-5fef1ea16ade
 md"
@@ -93,7 +100,7 @@ the mass of a cauli head in the fertilizer group tends (as measured by the media
 "
 
 # ╔═╡ 835ee2aa-0c33-11eb-3aea-3da4b923ac9e
-
+by(cauli_df, :group, mean_mass=:mass=>mean)
 
 # ╔═╡ bafffaf0-0c33-11eb-1aca-8f40e2f26125
 md"
@@ -275,6 +282,7 @@ html"
 # ╟─3704e316-0c31-11eb-14ab-d3f2fe5d1a84
 # ╠═90b997d2-0c31-11eb-1451-05ee41e55d37
 # ╟─b2881d96-0c31-11eb-08ae-71f566a6dc9b
+# ╠═269b5c40-0cb2-11eb-0e54-7b0b44920253
 # ╠═7afff85c-0c32-11eb-2412-1d0e3268a75a
 # ╟─7ba24210-0c32-11eb-1f0e-5fef1ea16ade
 # ╠═835ee2aa-0c33-11eb-3aea-3da4b923ac9e
