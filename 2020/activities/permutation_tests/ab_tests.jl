@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
@@ -82,6 +82,7 @@ df_grouped = groupby(cauli_df, :group)
 begin	
 	figure()
 	boxplot([grp[:mass] for grp in df_grouped], labels=[grp[1,:group] for grp in df_grouped])
+	ylabel("Mass (g)")
 	gcf()
 end
 
@@ -100,7 +101,7 @@ the mass of a cauli head in the fertilizer group tends (as measured by the media
 "
 
 # ╔═╡ 835ee2aa-0c33-11eb-3aea-3da4b923ac9e
-by(cauli_df, :group, mean_mass=:mass=>mean)
+by_output = by(cauli_df, :group, mean_mass=:mass=>mean)
 
 # ╔═╡ bafffaf0-0c33-11eb-1aca-8f40e2f26125
 md"
@@ -154,7 +155,9 @@ and returns the mean mass of cauliflowers falling in the group `which_group`.
 "
 
 # ╔═╡ f25fd298-0c35-11eb-3faf-57ff0c3e90f0
-
+function μ_mass(df_cauli::DataFrame, group_col_name::Symbol, which_group::String)
+	return mean(filter(row -> row[group_col_name] == which_group, df_cauli).mass)
+end
 
 # ╔═╡ 55af6ea2-0c37-11eb-040d-2fe6713d8c4b
 md"
@@ -162,10 +165,7 @@ md"
 "
 
 # ╔═╡ 659e5044-0c37-11eb-3ebc-8f5280b1691c
-
-
-# ╔═╡ 770258c6-0c37-11eb-228f-1765cfb0e0d3
-
+μ_mass(cauli_df, :group, "fertilizer")
 
 # ╔═╡ 88681c1e-0c36-11eb-3d3b-11c3232afb22
 md"
@@ -181,10 +181,12 @@ again, test the function to ensure it works.
 "
 
 # ╔═╡ 25a0b568-0c37-11eb-2c82-7529f204b77e
-
+function μ_treat_minus_μ_control(df_cauli::DataFrame, group_col_name::Symbol)
+	return μ_mass(df_cauli, group_col_name, "fertilizer") - μ_mass(df_cauli, group_col_name, "control")
+end
 
 # ╔═╡ 26b295d4-0c37-11eb-24b7-431cdfa1cd72
-
+μ_treat_minus_μ_control(cauli_df, :group)
 
 # ╔═╡ deb31352-0c37-11eb-0f41-2f26aade9aa5
 md"
@@ -205,13 +207,13 @@ the `:mass` column remains the same since, under the null hypothesis, the mass o
 "
 
 # ╔═╡ 83209cb6-0c38-11eb-02cb-69362bd01773
-
+cauli_df[!, :shuffled_group] = shuffle(cauli_df.group)
 
 # ╔═╡ f80a19e2-0c38-11eb-10cb-ff18f4342b13
 md"take a look at your data frame to compare the `:group` to `:shuffled_group` columns."
 
 # ╔═╡ ef88516e-0c38-11eb-29a4-531cf1c6f67b
-
+cauli_df
 
 # ╔═╡ 83a18108-0c38-11eb-32a9-57323e1332e7
 md"
@@ -222,7 +224,7 @@ md"
 "
 
 # ╔═╡ ddea8210-0c38-11eb-0dbb-75c3617a5238
-
+μ_treat_minus_μ_control(cauli_df, :group) > μ_treat_minus_μ_control(cauli_df, :shuffled_group)
 
 # ╔═╡ 403a4694-0c39-11eb-08de-7137b36af24e
 md"
@@ -237,13 +239,21 @@ draw a vertical line via `axvline` to indicate where the *actual*, observed test
 "
 
 # ╔═╡ c619d874-0c39-11eb-25c3-f5ef94861962
-
-
-# ╔═╡ ca4adf74-0c39-11eb-0c21-47a437ad903b
-
+begin
+	n = 10000
+	stats_array = zeros(n)
+	for i in 1:n
+		shuffle!(cauli_df.shuffled_group)
+		stats_array[i] = μ_treat_minus_μ_control(cauli_df, :shuffled_group)
+	end
+end
 
 # ╔═╡ ccab4484-0c39-11eb-12ef-b10f58408c6d
-
+begin
+	figure()
+	hist(stats_array)
+	gcf()
+end
 
 # ╔═╡ ce2e71aa-0c39-11eb-0dce-b1e265fee2a6
 md"
@@ -256,7 +266,7 @@ md"
 "
 
 # ╔═╡ 28011f70-0c3a-11eb-265f-533bb4e70edb
-
+p = sum(stats_array .- μ_treat_minus_μ_control(cauli_df, :group) .≥ 0)/n
 
 # ╔═╡ 3fafe840-0c3a-11eb-1442-077b29f06e52
 md"
@@ -291,7 +301,6 @@ html"
 # ╠═f25fd298-0c35-11eb-3faf-57ff0c3e90f0
 # ╟─55af6ea2-0c37-11eb-040d-2fe6713d8c4b
 # ╠═659e5044-0c37-11eb-3ebc-8f5280b1691c
-# ╠═770258c6-0c37-11eb-228f-1765cfb0e0d3
 # ╟─88681c1e-0c36-11eb-3d3b-11c3232afb22
 # ╠═25a0b568-0c37-11eb-2c82-7529f204b77e
 # ╠═26b295d4-0c37-11eb-24b7-431cdfa1cd72
@@ -303,7 +312,6 @@ html"
 # ╠═ddea8210-0c38-11eb-0dbb-75c3617a5238
 # ╟─403a4694-0c39-11eb-08de-7137b36af24e
 # ╠═c619d874-0c39-11eb-25c3-f5ef94861962
-# ╠═ca4adf74-0c39-11eb-0c21-47a437ad903b
 # ╠═ccab4484-0c39-11eb-12ef-b10f58408c6d
 # ╟─ce2e71aa-0c39-11eb-0dce-b1e265fee2a6
 # ╠═28011f70-0c3a-11eb-265f-533bb4e70edb
