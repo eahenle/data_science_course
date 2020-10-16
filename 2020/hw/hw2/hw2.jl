@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
@@ -123,7 +123,7 @@ automobile_col_names = [:mpg, :cylinders, :displacement, :horsepower, :weight,
 	                    :acceleration, :model_year, :origin, :car_name]
 
 # ╔═╡ 7c513efc-0848-11eb-1fa6-b3801eba964e
-df_auto = names!(CSV.read("data/automobiles.csv", copycols=true), automobile_col_names)
+df_auto = names!(CSV.read("data/automobiles.csv", copycols=true, header=0), automobile_col_names)
 
 # ╔═╡ 8b97908c-0848-11eb-3474-490d8d0f6cfd
 md"
