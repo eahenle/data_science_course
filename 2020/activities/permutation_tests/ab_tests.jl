@@ -240,7 +240,7 @@ draw a vertical line via `axvline` to indicate where the *actual*, observed test
 
 # ╔═╡ c619d874-0c39-11eb-25c3-f5ef94861962
 begin
-	n = 10000
+	n = 200000
 	stats_array = zeros(n)
 	for i in 1:n
 		shuffle!(cauli_df.shuffled_group)
@@ -266,7 +266,7 @@ md"
 "
 
 # ╔═╡ 28011f70-0c3a-11eb-265f-533bb4e70edb
-p = sum(stats_array .- μ_treat_minus_μ_control(cauli_df, :group) .≥ 0)/n
+p = sum(stats_array .≥ μ_treat_minus_μ_control(cauli_df, :group))/n
 
 # ╔═╡ 3fafe840-0c3a-11eb-1442-077b29f06e52
 md"
