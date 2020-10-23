@@ -27,7 +27,7 @@ html"<center>
 </center?"
 
 # ╔═╡ f9c0e1fc-14dd-11eb-1886-59eb872025d8
-
+iris_df = CSV.read("iris.data", copycols=true)
 
 # ╔═╡ bafdfec6-14df-11eb-07ed-79856a162ab6
 md"
@@ -35,7 +35,7 @@ md"
 "
 
 # ╔═╡ 6f36364e-14de-11eb-16d4-37f19de4641c
-
+filter!(row -> row.class == "Iris-versicolor", iris_df)
 
 # ╔═╡ 61df6518-14e0-11eb-10ea-a5a58833a9b4
 md"
@@ -43,7 +43,9 @@ md"
 "
 
 # ╔═╡ 830091d8-14de-11eb-04bf-07249b2650a4
-
+md"""
+There are $(size(iris_df, 1)) versicolor Irises in the data set.
+"""
 
 # ╔═╡ 74b165ec-14e0-11eb-3b90-89aefc514373
 md"there are many more than 50 versicolors out there. this is just a _random sample_ of versicolors (well, let's assume these versicolors were randomly selected for sepal length measurements).
@@ -62,7 +64,11 @@ _empirical distribution_: the distribution of observed data, often visualized by
 "
 
 # ╔═╡ fff76802-14dd-11eb-3dcb-630c54eb3966
-
+begin
+	figure()
+	hist(iris_df.sepal_length_cm)
+	gcf()
+end
 
 # ╔═╡ b098a1e8-14e1-11eb-37af-f51ff458342a
 md"
@@ -82,7 +88,9 @@ this is an estimator for the population mean.
 "
 
 # ╔═╡ de56b23c-14e2-11eb-25e1-e388a868e390
-
+md"""
+The average is $(mean(iris_df.sepal_length_cm)) cm.
+"""
 
 # ╔═╡ 14685382-14e3-11eb-2153-29a9bd426eed
 md"
@@ -109,10 +117,15 @@ the result is the _bootstrap empirical distribution of the sample mean_ sepal le
 "
 
 # ╔═╡ 658a0214-14e4-11eb-3225-b1f690e3993b
-
+begin
+	bootstrap_averages = Float64[]
+	for i ∈ 1:1500
+		push!(bootstrap_averages, mean(sample(iris_df.sepal_length_cm, 50)))
+	end
+end
 
 # ╔═╡ 483ab8ba-14e5-11eb-28dc-a5f1c3f7f21b
-
+bootstrap_averages
 
 # ╔═╡ ca01c91a-14e5-11eb-2e02-3bee646d2414
 md"
@@ -127,7 +140,10 @@ more specifically, 2.5% of bootstrap sample means fall to the left of the interv
 "
 
 # ╔═╡ 36d8f176-14e6-11eb-13fa-370a09e4f864
+percentile(bootstrap_averages, 2.5)
 
+# ╔═╡ 153895a0-1557-11eb-3d2c-4510385fed0f
+percentile(bootstrap_averages, 97.5)
 
 # ╔═╡ 533f3142-14e6-11eb-0946-7dca11462e78
 md"
@@ -143,7 +159,11 @@ md"
 "
 
 # ╔═╡ 7ef2c324-14e6-11eb-23ee-3569ff389cb1
-
+begin
+	figure()
+	(n, _, _) = hist(bootstrap_averages)
+	gcf()
+end
 
 # ╔═╡ 375b15d6-14e6-11eb-18da-2bedd9945456
 md"
@@ -177,6 +197,7 @@ as a warning, bootstrap does not work very well when the sample size is small (e
 # ╠═483ab8ba-14e5-11eb-28dc-a5f1c3f7f21b
 # ╟─ca01c91a-14e5-11eb-2e02-3bee646d2414
 # ╠═36d8f176-14e6-11eb-13fa-370a09e4f864
+# ╠═153895a0-1557-11eb-3d2c-4510385fed0f
 # ╟─533f3142-14e6-11eb-0946-7dca11462e78
 # ╠═7ef2c324-14e6-11eb-23ee-3569ff389cb1
 # ╟─375b15d6-14e6-11eb-18da-2bedd9945456
