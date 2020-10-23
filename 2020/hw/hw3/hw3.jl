@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.3
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
@@ -8,7 +8,7 @@ using InteractiveUtils
 using DataFrames, CSV, PyPlot, Random
 
 # ╔═╡ c0680ed8-0e36-11eb-11fb-f18d31acff70
-my_name = "Oslo 🐶"
+my_name = "Adrian 🐓";
 
 # ╔═╡ 8dd3c444-0e36-11eb-1ea4-557fcf1612ff
 md"
@@ -58,7 +58,7 @@ we then expose each plant in the experiment to the fungus that causes Panama dis
 "
 
 # ╔═╡ 7c557912-0e39-11eb-1fb9-a70ddb2de7b4
-
+df = CSV.read("banana_study.csv", copycols=true)
 
 # ╔═╡ 11f17eb2-0e3a-11eb-0f12-9fbbcb70332b
 md"
@@ -73,7 +73,15 @@ i.e. create a dataframe, `df_outcome`:
 "
 
 # ╔═╡ 2b4e1258-0e3a-11eb-3d68-554a7486c259
-
+begin
+	function infected_proportion(outcomes)
+		infected = count(outcome -> (outcome == "infected"), outcomes)
+		total = length(outcomes)
+		return infected / total
+	end
+	
+	df_outcome = by(df, :gene_x, p_infected=:outcome => infected_proportion)
+end
 
 # ╔═╡ 4814fe24-0e3a-11eb-0ce5-8793afbab239
 md"
@@ -87,7 +95,14 @@ particularly, make a bar plot with two bars, one corresponding to wild type, the
 "
 
 # ╔═╡ c3c5c224-0e3a-11eb-0150-d96fbd4db956
+# could not get a plot using `bottom` kwarg, but sequential plotting gets the job done
 
+begin
+	figure()
+	barh(df_outcome.gene_x, 1, color="yellow")
+	barh(df_outcome.gene_x, df_outcome.p_infected, color="brown")
+	gcf()
+end
 
 # ╔═╡ e742d58e-0e53-11eb-38c9-7956a9f123d1
 md"
@@ -99,7 +114,7 @@ why, then can't we conclude that this genetic variant is **certainly** more resi
 # ╔═╡ e6f6f89e-0e53-11eb-3e61-3b8ab3e61a20
 md"
 
-b/c...
+Wild type has a lower rate of infection *in this sampling.*  It is possible that the observed difference is a statistical anomaly.
 
 "
 
@@ -111,9 +126,9 @@ among the population of banana plants exposed to the fungus that causes Panama d
 
 # ╔═╡ 5a362726-0e54-11eb-32c0-cf0e21babba0
 md"
-_null hypothesis_: ...
+_null hypothesis_: mutation has no effect on infection rate
 
-_alternative hypothesis_: ...
+_alternative hypothesis_: mutation increases infection rate
 "
 
 # ╔═╡ 66504e7e-0e54-11eb-2f1e-dd6b1841e2d3
@@ -126,7 +141,7 @@ md"
 
 # ╔═╡ b247bd58-0e54-11eb-1388-eb9db4242ab2
 md"
-_test statistic_:= ...
+_test statistic_:= $p(wild type) - p(mutant)$ where $p(x)$ is the proportion of bananas in group $x$ infected with Panama disease.
 
 "
 
@@ -139,16 +154,21 @@ and returns the proportion of banana plants harboring `gene_x` (`=\"wild type\"`
 "
 
 # ╔═╡ f38c766e-0e56-11eb-3d94-95d4607bb78f
-
+function proportion_infected(df_banana::DataFrame, gene_x_col_name::Symbol, gene_x::String)
+	outcomes = filter(row -> row[gene_x_col_name] == gene_x, df_banana).outcome
+	infected = count(outcome -> (outcome == "infected"), outcomes)
+	total = length(outcomes)
+	return infected / total
+end
 
 # ╔═╡ f4124710-0e56-11eb-1e43-215ae7cf4b15
 md"🐸 test your function `proportion_infected` on the two different groups of plants."
 
 # ╔═╡ 186fdb18-0e57-11eb-193f-fbb753faa244
-
+proportion_infected(df, :gene_x, "wild type")
 
 # ╔═╡ 18fd84e0-0e57-11eb-36a6-c72f5f1db6a6
-
+proportion_infected(df, :gene_x, "mutant")
 
 # ╔═╡ 19e4df3e-0e57-11eb-34b1-496c40474b94
 md"
@@ -162,7 +182,9 @@ and returns the test statistic.
 "
 
 # ╔═╡ 6523fe3a-0e57-11eb-08a7-dfc38a3df774
-
+function difference_in_proportions_infected(df_banana::DataFrame, gene_x_col_name::Symbol)
+	return proportion_infected(df_banana, gene_x_col_name, "wild type") - proportion_infected(df_banana, gene_x_col_name, "mutant")
+end
 
 # ╔═╡ a13b76c8-0e57-11eb-07af-770597bed043
 md"
@@ -170,7 +192,7 @@ md"
 "
 
 # ╔═╡ e55a31dc-0e57-11eb-182d-9f02479717d3
-
+observed_δ = difference_in_proportions_infected(df, :gene_x)
 
 # ╔═╡ e7472eb4-0e57-11eb-228a-51705eeccbff
 md"🐸 imagine we are at the beginning of the experiment where we selected 60 banana plants. at this point, we are randomly selecting which banana plants receive the genetic modification on gene X and which do not. now, simulate one repetition of the banana study, _operating under the assumption that the null hypothesis is true_, by permuting the labels in the `gene_x` column of `df`. this effectively simulates the random allocation of healthy banana plants to the two groups:
@@ -181,7 +203,7 @@ in this conceptual experiment, the outcome (infected vs. not) would be exactly t
 "
 
 # ╔═╡ 0938881a-0e58-11eb-2df7-b5a2227ca1a5
-
+df[!, :shuffled_gene_x] = shuffle(df.gene_x)
 
 # ╔═╡ f72ccbbe-0e58-11eb-143e-09c728ac7abd
 md"🐸 _operating under the assumption that the null hypothesis is true_:
@@ -193,19 +215,30 @@ md"🐸 _operating under the assumption that the null hypothesis is true_:
 (c) compute the p-value associated with our null hypothesis that you obtained from your _random permutation test_."
 
 # ╔═╡ 1438de8a-0e59-11eb-2bff-effebb5c898b
-
+begin
+	simulated_stats = Float64[]
+	for i in 1:1e4
+		shuffle!(df.shuffled_gene_x)
+		push!(simulated_stats, difference_in_proportions_infected(df, :shuffled_gene_x))
+	end
+end
 
 # ╔═╡ 4c5d30c2-0e59-11eb-3987-3bc356bb1f66
-
+begin
+	figure()
+	hist(simulated_stats, bins=[-0.5:0.2:0.5...])
+	axvline(observed_δ ,color="red")
+	gcf()
+end
 
 # ╔═╡ 5b2e1530-0e59-11eb-055a-e38373f7005d
-
+p_value = count(stat -> stat ≤ observed_δ, simulated_stats)/length(simulated_stats);
 
 # ╔═╡ 1573d0fc-0e59-11eb-14de-0710879b5f16
 md"🐸 explain what the the p-value represents."
 
 # ╔═╡ 28b13f36-0e59-11eb-215a-6b7f4198ec0b
-md"the p-value is ..."
+md"the p-value is $p_value"
 
 # ╔═╡ 66ca616c-0e59-11eb-30e1-132f15afa55d
 md"
@@ -215,7 +248,7 @@ md"
 "
 
 # ╔═╡ 8e0babd4-0e59-11eb-0c9a-d9b5d4c6eab0
-i_read_the_nature_article = false
+i_read_the_nature_article = true
 
 # ╔═╡ b2142f74-0e59-11eb-19e9-258bedc028e6
 if ! i_read_the_nature_article
@@ -231,7 +264,7 @@ end
 
 # ╔═╡ Cell order:
 # ╟─8dd3c444-0e36-11eb-1ea4-557fcf1612ff
-# ╠═c0680ed8-0e36-11eb-11fb-f18d31acff70
+# ╟─c0680ed8-0e36-11eb-11fb-f18d31acff70
 # ╠═96a40376-0e39-11eb-1898-2dc6106f6b8b
 # ╠═a32ca600-0e39-11eb-32c3-710b5ac87a02
 # ╟─5b6651ce-0e37-11eb-2b5a-c3f876485e83

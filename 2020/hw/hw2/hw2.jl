@@ -123,7 +123,10 @@ automobile_col_names = [:mpg, :cylinders, :displacement, :horsepower, :weight,
 	                    :acceleration, :model_year, :origin, :car_name]
 
 # ╔═╡ 7c513efc-0848-11eb-1fa6-b3801eba964e
-df_auto = names!(CSV.read("data/automobiles.csv", copycols=true, header=0), automobile_col_names)
+begin
+	df_auto = CSV.read("data/automobiles.csv", copycols=true, header=0)
+	names!(df_auto, automobile_col_names)
+end
 
 # ╔═╡ 8b97908c-0848-11eb-3474-490d8d0f6cfd
 md"
