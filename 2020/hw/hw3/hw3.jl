@@ -95,12 +95,14 @@ particularly, make a bar plot with two bars, one corresponding to wild type, the
 "
 
 # ╔═╡ c3c5c224-0e3a-11eb-0150-d96fbd4db956
-# could not get a plot using `bottom` kwarg, but sequential plotting gets the job done
-
 begin
 	figure()
-	barh(df_outcome.gene_x, 1, color="yellow")
-	barh(df_outcome.gene_x, df_outcome.p_infected, color="brown")
+	for i ∈ 1:size(df_outcome, 1)
+		bar(df_outcome.gene_x[i], 1-df_outcome.p_infected[i], bottom=df_outcome.p_infected[i], color="yellow")
+		bar(df_outcome.gene_x[i], df_outcome.p_infected[i], color="brown")
+	end
+#	barh(df_outcome.gene_x, 1, color="yellow")
+#	barh(df_outcome.gene_x, df_outcome.p_infected, color="brown")
 	gcf()
 end
 
